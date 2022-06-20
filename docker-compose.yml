@@ -1,0 +1,80 @@
+version: "3.5"
+
+services:
+  zookeeper:
+    image: 'bitnami/zookeeper:latest'
+    ports:
+      - '2181:2181'
+    environment:
+      - ALLOW_ANONYMOUS_LOGIN=yes
+      - ALLOW_PLAINTEXT_LISTENER=yes
+    networks:
+      - default
+
+  kafka:
+    image: 'bitnami/kafka:latest'
+    ports:
+      - '9092:9092'
+    environment:
+      - KAFKA_BROKER_ID=1
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://kafka:9092
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092
+      - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
+      - ALLOW_PLAINTEXT_LISTENER=yes
+    depends_on:
+      - zookeeper
+    networks:
+      - default
+
+  producer:
+    container_name: producer
+    build: 
+      args:
+        user: ${USER}
+        uid: ${USER_ID}
+      context: ./docker/php
+      dockerfile: Dockerfile
+    volumes:
+      - "./producer/:/var/www/html"
+    restart: always
+    environment:
+      - CONTAINER_NAME=producer
+    networks:
+      - default
+
+  consumer_1:
+    container_name: consumer_1
+    build: 
+      args:
+        user: ${USER}
+        uid: ${USER_ID}
+      context: ./docker/php
+      dockerfile: Dockerfile
+    volumes:
+      - "./consumer/:/var/www/html"
+    restart: always
+    environment:
+      - CONTAINER_NAME=consumer_1
+    networks:
+      - default
+
+  consumer_2:
+    container_name: consumer_2
+    build: 
+      args:
+        user: ${USER}
+        uid: ${USER_ID}
+      context: ./docker/php
+      dockerfile: Dockerfile
+    volumes:
+      - "./consumer/:/var/www/html"
+    restart: always
+    environment:
+      - CONTAINER_NAME=consumer_2
+    networks:
+      - default
+
+networks:
+  default:
+    ipam:
+      driver: default
